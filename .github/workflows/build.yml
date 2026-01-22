@@ -30,29 +30,9 @@ jobs:
       - name: Install composer dependencies
         run: composer install --no-progress --prefer-dist --no-interaction
 
-      - name: Prepare .env, sqlite DB and APP_KEY
+      - name: Prepare sqlite DB and APP_KEY
         run: |
-          # Als .env.example bestaat, kopieer het naar .env; anders maak een minimale .env aan
-          if [ -f .env.example ]; then
-            cp .env.example .env
-          else
-            cat > .env <<'EOF'
-APP_NAME=DeploymentApp
-APP_ENV=local
-APP_KEY=
-APP_DEBUG=true
-APP_URL=http://localhost
-DB_CONNECTION=sqlite
-DB_DATABASE=/github/workspace/database/database.sqlite
-EOF
-          fi
-
-          # Maak sqlite DB file
-          mkdir -p database
           touch database/database.sqlite
-          chmod 666 database/database.sqlite || true
-
-          # Genereer APP_KEY in .env
           php artisan key:generate --ansi
 
       - name: Run static analysis (PHPStan) (optioneel)
