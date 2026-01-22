@@ -7,6 +7,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,7 +35,7 @@ jobs:
           touch database/database.sqlite
           php artisan key:generate --ansi
 
-      - name: Run static analysis (PHPStan)
+      - name: Run static analysis (PHPStan) (optioneel)
         run: |
           if [ -f vendor/bin/phpstan ]; then
             vendor/bin/phpstan analyse || true
@@ -39,7 +43,7 @@ jobs:
             echo "PHPStan niet geïnstalleerd (dev dependency)."
           fi
 
-      - name: Run PHP CS Fixer (dry-run)
+      - name: Run PHP CS Fixer (dry-run) (optioneel)
         run: |
           if [ -f vendor/bin/php-cs-fixer ]; then
             vendor/bin/php-cs-fixer fix --dry-run --diff || true
@@ -53,9 +57,9 @@ jobs:
           DB_DATABASE: database/database.sqlite
         run: vendor/bin/phpunit --testdox
 
-      - name: Build Docker image (CI tag)
+      - name: Build Docker image (CI tag, lokaal in runner)
         uses: docker/build-push-action@v4
         with:
           context: .
           push: false
-          tags: noahklaassen/deployment-app:ci
+          tags: docker.io/noahklaassen/deployment-app:ci
