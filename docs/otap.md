@@ -9,7 +9,7 @@ OTAP staat voor: Ontwikkel - Test - Acceptatie - Productie.
 
 ## Test
 - Locatie: CI/CD (GitHub Actions) of aparte test server.
-- Config: zelfde als productie maar met testdata; geautomatiseerde tests (PHPUnit, eventueel Dusk).
+- Config: zelfde als productie, maar met testdata; geautomatiseerde tests (PHPUnit, eventueel Dusk).
 - Doel: automatische validatie dat code werkt (unit/integratie).
 
 ## Acceptatie
