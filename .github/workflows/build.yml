@@ -1,0 +1,61 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v3
+        with:
+          php-version: 8.2
+          extensions: mbstring, pdo_sqlite, zip
+
+      - name: Install system dependencies
+        run: sudo apt-get update -y && sudo apt-get install -y sqlite3
+
+      - name: Install composer dependencies
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      - name: Prepare sqlite DB and APP_KEY
+        run: |
+          touch database/database.sqlite
+          php artisan key:generate --ansi
+
+      - name: Run static analysis (PHPStan)
+        run: |
+          if [ -f vendor/bin/phpstan ]; then
+            vendor/bin/phpstan analyse || true
+          else
+            echo "PHPStan niet geïnstalleerd (dev dependency)."
+          fi
+
+      - name: Run PHP CS Fixer (dry-run)
+        run: |
+          if [ -f vendor/bin/php-cs-fixer ]; then
+            vendor/bin/php-cs-fixer fix --dry-run --diff || true
+          else
+            echo "php-cs-fixer niet geïnstalleerd (dev dependency)."
+          fi
+
+      - name: Run tests
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+        run: vendor/bin/phpunit --testdox
+
+      - name: Build Docker image (CI tag)
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: false
+          tags: noahklaassen/deployment-app:ci
